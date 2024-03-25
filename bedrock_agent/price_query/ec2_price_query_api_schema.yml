@@ -1,0 +1,72 @@
+openapi: '3.0.0'
+info:
+  title: API Title
+  version: '1.0'
+  description: query the price of AWS ec2 instance
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /query_ec2_price:
+    get:
+      summary: query the price of AWS ec2 instance
+      description: query the price of AWS ec2 instance
+      operationId: query_ec2_price
+      parameters:
+        - name: instance_type
+          in: query
+          description: the AWS ec2 instance type, for example, c5.xlarge, m5.large, t3.mirco, g4dn.2xlarge, if it is a partial of the instance type, you should try to auto complete it. for example, if it is r6g.2x, you can complete it as r6g.2xlarge
+          required: true
+          schema:
+            type: string
+        - name: region
+          in: query
+          description: the AWS region name where the ec2 is located in, for example us-east-1, us-west-1, if it is common words such as 'us east 1','美东1','美西2',you should try to normalize it to standard AWS region name, for example, 'us east 1' is normalized to 'us-east-1', '美东2' is normalized to 'us-east-2','美西2' is normalized to 'us-west-2','北京' is normalized to 'cn-north-1', '宁夏' is normalized to 'cn-northwest-1', '中国区' is normalized to 'cn-north-1'
+          required: true
+          schema:
+            type: string
+            default: us-east-1
+        - name: os
+          in: query
+          description: the operating system of ec2 instance, the valid value should be 'Linux' or 'Windows'
+          required: false
+          schema:
+            type: string
+            default: Linux
+            enum:
+              - Linux
+              - Windows
+        - name: term
+          in: query
+          description: the payment term, 'RI' is normalized to 'Reserved'. the valid value should be 'OnDemand' or 'Reserved'
+          required: false
+          schema:
+            type: string
+            default: OnDemand
+            enum:
+              - OnDemand
+              - RI
+        - name: purchase_option
+          in: query
+          description: the purchase option of Reserved instance, the valid value should be 'No Upfront', 'Partial Upfront' or 'All Upfront'
+          required: false
+          schema:
+            type: string
+            default: No Upfront
+            enum:
+              - No Upfront
+              - Partial Upfront
+              - All Upfront
+      responses:
+        '200':
+          description: successful get the price of ec2 instance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: status code of the price query api
+                  results:
+                    type: string
+                    description: result of the price query api
