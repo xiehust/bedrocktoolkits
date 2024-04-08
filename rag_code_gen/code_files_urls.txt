@@ -1,0 +1,4 @@
+https://github.com/aws-samples/private-llm-qa-bot/blob/main/notebooks/embedding/bge_m3_deploy.ipynb
+https://github.com/aws-samples/private-llm-qa-bot/blob/main/notebooks/embedding/bge-reranker-v2-m3-deploy.ipynb
+https://github.com/aws-samples/private-llm-qa-bot/blob/main/notebooks/llm/baichuan2_13b_gptq_deploy.ipynb
+https://github.com/aws-samples/private-llm-qa-bot/blob/main/notebooks/llm/qwen15_14b_int4_deploy.ipynb
