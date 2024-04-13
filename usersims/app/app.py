@@ -62,12 +62,13 @@ with st.container():
                 )
     fixed_prompt_template_token = int(st.text_input('用户Prompt提示词模板token数，包含system prompt', 1000))
     e_in = int(st.text_input('用户端实际输入的平均每轮token数', 500))
+    scale_1 = int(st.slider('调整输入正态分布的系数(越大越窄)', 1,200,10))
     e_out = int(st.text_input('输出的平均每轮token数', 1000))
-    scale = int(st.slider('正态分布的系数', 1,50,10))
+    scale_2 = int(st.slider('调整输出正态分布的系数(越大越窄)', 1,200,10))
 
     if st.button('生成模拟数据',key='step2',type='primary'):
-        token_dist = np.random.normal(loc=(e_in,e_out), scale=e_in/scale, size=(DAU,2))
-        token_dist = np.round(token_dist.T)
+        token_dist = np.random.normal(loc=(e_in,e_out), scale=[e_in/scale_1,e_out/scale_2], size=(DAU,2))
+        token_dist = np.clip(np.round(token_dist.T),1,max(e_in,e_out)*4)
         st.session_state['token_dist'] = token_dist
     if 'token_dist' in st.session_state:
         token_dist = st.session_state['token_dist']
