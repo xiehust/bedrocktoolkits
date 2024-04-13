@@ -136,8 +136,8 @@ with st.container():
     """最终三部分之和是总数( i + ii + iii )
     """)
     
-    st.markdown("**:blue[准备计算]**")
-    max_keep_turns = int(st.text_input('一次会话中，需要保留的最长消息轮数，例如最多前m轮', 10)) +1  ##加上新的一轮
+    st.markdown("**:blue[设置最大保留历史消息轮数]**")
+    max_keep_turns = int(st.text_input('一次会话中，需要保留的最长消息轮数，例如最多前10轮', 10)) +1  ##加上新的一轮
     
     def compute(model_name):
         cliped_t_rounds = np.clip(t_rounds,min_rounds,max_keep_turns)
