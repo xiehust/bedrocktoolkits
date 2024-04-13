@@ -134,7 +134,7 @@ with st.container():
     st.caption(
         
     """最终三部分之和是总数( i + ii + iii )
-    """)
+    """) 
     
     st.markdown("**:blue[设置最大保留历史消息轮数]**")
     max_keep_turns = int(st.text_input('一次会话中，需要保留的最长消息轮数，例如最多前10轮', 10)) +1  ##加上新的一轮
