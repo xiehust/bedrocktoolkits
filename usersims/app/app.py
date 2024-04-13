@@ -12,20 +12,18 @@ st.set_page_config(
 st.header("👋 Welcome to Claude 3 Pricing Simulator 📊",divider='rainbow')
 
 st.subheader("一：用户参数模拟",divider='gray')
-col1, col2 = st.columns(2)
+# col1, col2 = st.columns(2)
 with st.container():
-    with col1:
-        DAU = int( st.text_input('1. DAU,请输入日活用户如', 10000))
-        min_rounds = int(st.text_input('3. 最小轮数,请输入最小轮数如,2', 2))
-    with col2:
-        MAU = int(st.text_input('2. MAU,请输入月活用户如', 50000))
-        max_rounds = int(st.text_input('4. 最大轮数,请输入最大轮数如,200', 200))
+    DAU = int( st.text_input('1. DAU,请输入日活用户数', 10000))
+    MAU = int(st.text_input('2. MAU,请输入月活用户数', 50000))
+    min_rounds = int(st.text_input('3. 日活用户每日最少聊天轮数,默认2', 2))
+    max_rounds = int(st.text_input('4. 日活用户每日最大聊天轮数,默认200', 200))
         
-    distribution_type = st.selectbox('选择用户聊天轮数分布类型', ['长尾分布','正态分布'])
+    distribution_type = st.selectbox('选择日活用户聊天轮数分布类型', ['长尾分布','正态分布'])
     st.caption('长尾分布：一般常见于聊天，情感陪伴等。正态分布：一般常见于有固定用户引导模式，需要完成任务型，如教育类作文批改等')
 
     if distribution_type == '长尾分布':
-        scale_factor = int(st.slider('选择系数，长尾分布为默认10，正态分布为2',0, 50, 10))
+        scale_factor = int(st.slider('模拟系数调整，长尾分布为默认10，正态分布为2',0, 50, 10))
 
         if st.button('生成模拟数据',key='step0',type='primary'):
             t_rounds = np.round(np.random.exponential((scale_factor),(DAU)))
@@ -40,7 +38,7 @@ with st.container():
             st.write(pd.Series(t_rounds,name='轮数').describe())
 
     elif distribution_type == '正态分布':
-        scale_factor = int(st.slider('选择系数，长尾分布为默认10，正太分布为2',0, 50, 2))
+        scale_factor = int(st.slider('模拟系数调整，长尾分布为默认10，正态分布为2',0, 50, 2))
         expection =st.slider('选择正态分布的期望',0.0, 50.0, 20.0,0.5)
         if st.button('生成模拟数据',key='step1',type='primary'):
             t_rounds = np.round(np.random.normal(loc=expection, scale=scale_factor, size=(DAU)))
@@ -57,8 +55,8 @@ with st.container():
 st.divider() 
 st.subheader("二：Token数模拟",divider='gray')
 with st.container():
-    st.markdown("""- 需要设定，Prompt模板的固定token数，多轮对话的时候，历史消息里只会放User实际Input，而不放Prompt template，所以需要分开计算"""
-                """- 假设每轮的新消息的input token数和output token数是分别以E_In, E_Out 为期望的正态分布"""
+    st.markdown("""- (可选)设定Prompt模板的固定token数，要分开考虑用户的输入和Prompt template+System的token数。因为在多轮对话的时候，历史消息里只会放用户实际Input query，而不放Prompt template，所以需要分开计算"""
+                """- 这里假设每轮的用户query的input token数和output token数是分别以E_In, E_Out 为期望的正态分布"""
                 )
     fixed_prompt_template_token = int(st.text_input('用户Prompt提示词模板token数，包含system prompt', 1000))
     e_in = int(st.text_input('用户端实际输入的平均每轮token数', 500))
