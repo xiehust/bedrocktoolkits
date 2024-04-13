@@ -113,7 +113,7 @@ with st.container():
     # model_name = st.selectbox('选择模型', ['haiku', 'sonnet', 'opus','gpt-3.5','gpt-4-turbo'],key='11') 
     ##计算过程备注
     st.caption(
-    """- **计算过程备注：** 
+    """- **:blue[计算过程说明]** 
     - 每轮新对话发送给llm的输入input token = fixed_prompt_template_token + user_input_token + 历史消息的token. 
     - 一般历史消息里，只存放用户实际input token和output token，而fixed_prompt_template只会添加在当前的最新的对话里。 
     - 所以:第n轮对话的消耗token = (n-1)*(user_input_token+output_token) + (fixed_prompt_template_token + user_input_token+output_token)
@@ -127,7 +127,7 @@ with st.container():
     """
     - 考虑有些场景最多保留前m轮历史消息， 当n>m时， 则实际消耗应该是: """)
     st.latex("(user\_input\_token+output\_token)* (\sum_{\mathclap{k=1}}^{m} k + (n-m)*m)+ n*fixed\_prompt\_template\_token" )
-    st.caption("实际运算时，token, n,m 都会用(DAU,1)的向量代入，因此可以把上述公示拆解成3部分，直接进行批量运算，再加合")
+    st.caption("实际运算时，token, n,m 都会用(DAU)的数组代入，因此可以把上述公示拆解成3部分，直接进行批量运算，再加合")
     st.latex("\\tag{i} (1+m) * m/2* (user\_input\_token+output\_token)")
     st.latex("\\tag{ii} (n-m) * m * (user\_input\_token+output\_token)")
     st.latex("\\tag{iii} n * fixed\_prompt\_template\_token")
@@ -146,8 +146,8 @@ with st.container():
 
 
         rounds_part_1=  (1+cliped_t_rounds)*cliped_t_rounds /2 
-        rounds_part_2= (t_rounds-cliped_t_rounds)*max_keep_turns 
-        rounds_part_3 = (t_rounds-cliped_t_rounds)
+        rounds_part_2= np.clip((t_rounds-cliped_t_rounds),0,t_rounds.max())*max_keep_turns  ##使用clip来确保只计算n>m的部分
+        rounds_part_3 = t_rounds
         rounds_cost = rounds_part_1 * pure_avg_cost_round + rounds_part_2* pure_avg_cost_round + rounds_part_3*fixed_prompt_template_cost_round
         
         total_input_tokens =  rounds_part_1 *token_dist[0] + rounds_part_2*token_dist[0] + rounds_part_3*fixed_prompt_template_token
@@ -167,8 +167,8 @@ with st.container():
             results.append({
                             "Model Name": model_name,
                             # "总轮数 每天": t_rounds.sum()/1000,
-                            "总input token 每天(k)":round(t_rounds.sum()/1000),
-                            "总output token 每天(k)":round(t_rounds.sum()/1000),
+                            "总input token 每天(k)":round(total_input_tokens.sum()/1000),
+                            "总output token 每天(k)":round(total_output_tokens.sum()/1000),
                             "总cost 每天($)": round(rounds_cost.sum()),
                             "总cost 每月($)": round(rounds_cost.sum()*30),
                             "每月用户cost/MAU 成本($) ": round(rounds_cost.sum()*30/MAU,2),
