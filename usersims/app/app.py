@@ -169,7 +169,7 @@ with st.container():
                             "总output token 每天(k)":round(total_output_tokens.sum()/1000),
                             "总cost 每天($)": round(rounds_cost.sum()),
                             "总cost 每月($)": round(rounds_cost.sum()*30),
-                            "每月用户cost/MAU 成本($) ": round(rounds_cost.sum()*30/MAU,2),
+                            "每月用户cost/MAU 成本($) ": f"{round(rounds_cost.sum()*30/MAU,2):.2f}",
                            })
         st.session_state['rounds_cost_list'] = rounds_cost_list
         # st.markdown("**:blue[计算结果]**")
@@ -185,13 +185,22 @@ with st.container():
     if st.button('查看',key='step4', disabled = not is_data_ready(),type='primary'):
         if 'rounds_cost_list' in st.session_state:
             rounds_cost_view = st.session_state.rounds_cost_list.get(model_name_view)
-            rounds_cost_view= pd.Series(rounds_cost_view)
+            rounds_cost_view= pd.Series(rounds_cost_view).sort_values(ascending=False)
             cost_pct = []
             total = rounds_cost_view.sum()
-            for q in np.arange(0,1,0.1):
+            layer_step = 0.1
+            for q in np.arange(0,1,layer_step):
                 b = rounds_cost_view.quantile(q)
-                cost_pct.append([q,rounds_cost_view[rounds_cost_view>=b].sum()/total])    
-            data = pd.DataFrame(cost_pct,columns=['百分位','Cost占比'])
+                a = rounds_cost_view.quantile(q+layer_step)
+                selected = rounds_cost_view[(rounds_cost_view >= b) & (rounds_cost_view < a)]
+                cost_pct.append([f'{int(q*100)}%', 
+                                 selected.count(),
+                                 f'{selected.sum():.2f}',
+                                 f'{(selected.sum()*100/total):.2f}%',
+                                 f'{selected.sum()/selected.count():.2f}',
+                                 f'{selected.sum()*30/selected.count():.2f}'
+                                 ])    
+            data = pd.DataFrame(cost_pct,columns=['百分位','用户数','Cost($)','Cost占比','平均每用户日花费($)','平均每用户月花费($)'])
             st.success('分层数据', icon="✅")
             st.table(data)
 
