@@ -56,7 +56,7 @@ st.divider()
 st.subheader("二：Token数模拟",divider='gray')
 with st.container():
     st.markdown("""- (可选)设定Prompt模板的固定token数，要分开考虑用户的输入和Prompt template+System的token数。因为在多轮对话的时候，历史消息里只会放用户实际Input query，而不放Prompt template，所以需要分开计算"""
-                """- 这里假设每轮的用户query的input token数和output token数是分别以E_In, E_Out 为期望的正态分布"""
+                """- 这里假设每轮的用户query的input token数和output token数是分别以u1, u2 为期望的正态分布"""
                 )
     fixed_prompt_template_token = int(st.text_input('用户Prompt提示词模板token数，包含system prompt', 1000))
     e_in = int(st.text_input('用户端实际输入的平均每轮token数', 500))
@@ -109,31 +109,6 @@ st.divider()
 st.subheader("第四步：计算",divider='gray')
 with st.container(): 
     # model_name = st.selectbox('选择模型', ['haiku', 'sonnet', 'opus','gpt-3.5','gpt-4-turbo'],key='11') 
-    ##计算过程备注
-    st.caption(
-    """- **:blue[计算过程说明]** 
-    - 每轮新对话发送给llm的输入input token = fixed_prompt_template_token + user_input_token + 历史消息的token. 
-    - 一般历史消息里，只存放用户实际input token和output token，而fixed_prompt_template只会添加在当前的最新的对话里。 
-    - 所以:第n轮对话的消耗token = (n-1)*(user_input_token+output_token) + (fixed_prompt_template_token + user_input_token+output_token)
-    - 由于每轮对话，都会加上前N轮的对话记录，比如聊了n轮的用户，总共需要考虑的消息轮数，应该是1+2+3+...+n
-    - 所以累加起来就是:
-    """
-    )
-    st.latex("(user\_input\_token+output\_token) * \sum_{\mathclap{k=1}}^{n-1} k + n*(fixed\_prompt\_template\_token + user\_input\_token+output\_token)")
-    st.latex("= (user\_input\_token+output\_token)*(1+n) * n/2 + n * fixed\_prompt\_template\_token")
-    st.caption(
-    """
-    - 考虑有些场景最多保留前m轮历史消息， 当n>m时， 则实际消耗应该是: """)
-    st.latex("(user\_input\_token+output\_token)* (\sum_{\mathclap{k=1}}^{m} k + (n-m)*m)+ n*fixed\_prompt\_template\_token" )
-    st.caption("实际运算时，token, n,m 都会用(DAU)的数组代入，因此可以把上述公示拆解成3部分，直接进行批量运算，再加合")
-    st.latex("\\tag{i} (1+m) * m/2* (user\_input\_token+output\_token)")
-    st.latex("\\tag{ii} (n-m) * m * (user\_input\_token+output\_token)")
-    st.latex("\\tag{iii} n * fixed\_prompt\_template\_token")
-    st.caption(
-        
-    """最终三部分之和是总数( i + ii + iii )
-    """) 
-    
     st.markdown("**:blue[设置最大保留历史消息轮数]**")
     max_keep_turns = int(st.text_input('一次会话中，需要保留的最长消息轮数，例如最多前10轮', 10)) +1  ##加上新的一轮
     
@@ -209,6 +184,54 @@ st.markdown(
  """
     **:red[免责说明]**
     - 本计算器仅利用概率分布来拟合并模拟用户行为，通过这些生成的数据来模拟不同条件下使用Claude 3系列模型产生的费用
-    - 本计算器的仅用于模拟测算，结果仅供参考，请勿用于实际报价
+    - 本计算器的仅用于模拟测算，结果仅供参考，请勿用于实际报价  
+    
 """
 )
+##计算过程备注
+st.markdown(
+"""
+**:blue[方法说明]** 
+- 假设日活用户的日聊天轮数的分布符合某种随机分布
+- 长尾分布：一般常见于聊天，情感陪伴等。
+""")
+st.latex("Rounds \\backsim Exp (\lambda)")
+st.markdown(
+"""
+- 正态分布：一般常见于有固定用户引导模式，需要完成任务型，如教育类作文批改等
+""")
+st.latex("Rounds \\backsim N (\mu, \sigma^{2})")
+
+st.markdown(
+"""
+- 假设每轮的用户query的input token数和output token数是分别以u1, u1 为期望的正态分布
+""")
+st.latex("input\_token \\backsim N (\mu_1, \sigma_1^{2})")
+st.latex("output\_token \\backsim N (\mu_2, \sigma_2^{2})")
+
+st.markdown(
+"""
+- 某些情况下需要分开考虑用户的输入token和Prompt template+System的token数。因为在多轮对话的时候，历史消息里只会放用户实际input，而不放Prompt template，所以需要分开计算
+- 所以每轮新对话发送给llm的实际输入input token = fixed_prompt_template_token + user_input_token + 历史消息的token. 
+- 一般历史消息里，只存放用户实际input token和output token，而fixed_prompt_template只会添加在当前的最新的对话里。 
+- 所以:第n轮对话的消耗token = (n-1)*(user_input_token+output_token) + (fixed_prompt_template_token + user_input_token+output_token)
+- 由于每轮对话，都会加上前N轮的对话记录，比如聊了n轮的用户，总共需要考虑的消息轮数，应该是""")
+st.latex("\sum_{\mathclap{k=1}}^{n} k")
+st.markdown(
+"""
+- 所以累加起来就是:
+"""
+)
+st.latex("(user\_input\_token+output\_token) * \sum_{\mathclap{k=1}}^{n-1} k + n*(fixed\_prompt\_template\_token + user\_input\_token+output\_token)")
+st.latex("= (user\_input\_token+output\_token)*(1+n) * n/2 + n * fixed\_prompt\_template\_token")
+st.markdown(
+"""
+- 考虑有些场景最多保留前m轮历史消息， 当n>m时， 则实际消耗应该是: """)
+st.latex("(user\_input\_token+output\_token)* (\sum_{\mathclap{k=1}}^{m} k + (n-m)*m)+ n*fixed\_prompt\_template\_token" )
+st.markdown("由于token, n,m 都是随机分布采样的长度为(DAU)的数组，可以把上述公示拆解成3部分，直接进行批量运算，再加合")
+st.latex("\\tag{i} (1+m) * m/2* (user\_input\_token+output\_token)")
+st.latex("\\tag{ii} (n-m) * m * (user\_input\_token+output\_token)")
+st.latex("\\tag{iii} n * fixed\_prompt\_template\_token")
+st.markdown(
+"""**最终三部分之和是总数：( i + ii + iii )**
+""") 
