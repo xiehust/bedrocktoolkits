@@ -5,7 +5,7 @@ from boto3.session import Config
 from botocore.exceptions import ClientError
 
 #get modelARN
-region = 'us-east-1'#'us-west-2' #
+region = 'us-west-2' 
 
 config = Config(signature_version = 'v4',
                 retries = {

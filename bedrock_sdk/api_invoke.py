@@ -14,9 +14,10 @@ from datetime import datetime
 # boto3_bedrock.list_foundation_models()
 
 bedrock_runtime = boto3.client('bedrock-runtime',
-                           aws_access_key_id='',
-                           aws_secret_access_key='',
-                           region_name='us-east-1')
+                        #    aws_access_key_id='',
+                        #    aws_secret_access_key='',
+                        profile='c35',
+                           region_name='us-west-2')
 	
 
 	
